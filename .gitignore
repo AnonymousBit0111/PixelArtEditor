@@ -1,0 +1,4 @@
+include/SFML
+src/imgui
+lib/*
+bin/*
