@@ -21,7 +21,7 @@ Game::Game()
             shape.setSize(cellsize);
             shape.setFillColor(sf::Color::Blue);
             shape.setOutlineColor(sf::Color::White);
-            shape.setOutlineThickness(1);
+
             shapes.push_back(shape);
         }
     }
@@ -89,15 +89,37 @@ void Game::PollEvents(sf::Event &e)
         switch (e.type)
         {
         case sf::Event::MouseMoved:
-        // TODO: add dragging
-        //  if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
-        //  {
-        //      sf::View view = window.getView();
-        //      sf::Vector2f deltaPos = sf::Vector2f(e.mouseMove.x * 0.01, e.mouseMove.y * 0.01);
-        //      view.setCenter(view.getCenter() + deltaPos);
-        //      window.setView(view);
-        //  }
-        //  break;
+            // TODO: add dragging
+            //  if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+            //  {
+            //      sf::View view = window.getView();
+            //      sf::Vector2f deltaPos = sf::Vector2f(e.mouseMove.x * 0.01, e.mouseMove.y * 0.01);
+            //      view.setCenter(view.getCenter() + deltaPos);
+            //      window.setView(view);
+            //  }
+            {
+                auto pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+                bool broken = false;
+                for (auto &i : shapes)
+                {
+                    if (i.getGlobalBounds().contains(pos.x, pos.y))
+                    {
+                        if (selected != nullptr)
+                        {
+                            selected->setFillColor(prevcolor);
+                        }
+                        prevcolor = i.getFillColor();
+                        selected = &i;
+                        selected->setFillColor(sf::Color::White);
+                        broken = true;
+                        break;
+                    }
+                }
+                if (!broken){
+                    selected->setFillColor(prevcolor);
+                }
+            }
+            break;
         case sf::Event::Closed:
             window.close();
             break;

@@ -14,7 +14,8 @@ private:
     sf::RenderWindow window = sf::RenderWindow(sf::VideoMode(640, 640, 8), "PixelArtEditor");
     sf::Clock deltaClock;
     std::vector<sf::RectangleShape> shapes;
-    
+    sf::RectangleShape *selected = nullptr;
+    sf::Color prevcolor;
 
     char *buffer = new char[1000];
 
