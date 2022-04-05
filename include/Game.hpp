@@ -1,6 +1,9 @@
+#pragma once
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include "imgui.h"
+#include "imgui-SFML.h"
 
 enum class State
 {
@@ -15,14 +18,23 @@ private:
     sf::Clock deltaClock;
     std::vector<sf::RectangleShape> shapes;
     sf::RectangleShape *selected = nullptr;
+    bool showcolour;
+
+    bool init = ImGui::SFML::Init(window);
+    // previous colour of the currently selected rectangle , do not modify anymore
     sf::Color prevcolor;
+    float currentcolor[3] = {1.0f, 1.0f, 1.0f};
+    float scrollSpeed = 1.5;
 
     char *buffer = new char[1000];
+    ImGuiIO &io = ImGui::GetIO();
+    std::vector<float> memusage;
 
 public:
     Game();
     ~Game();
     void Run();
+    void SelectShapeAt(sf::Vector2f pos);
     void Update();
     void DrawSprites();
     void Draw();
