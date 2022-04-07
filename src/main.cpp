@@ -4,7 +4,7 @@
 
 #include "SFML/Graphics.hpp"
 
-int main()
+int main(int argv, char **argc)
 {
     Game game;
     game.Run();

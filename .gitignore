@@ -2,3 +2,4 @@ include/SFML
 src/imgui
 lib/*
 bin/*
+log.txt

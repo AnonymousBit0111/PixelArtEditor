@@ -45,14 +45,18 @@ bool Utility::SaveToPNG(std::string &path, std::vector<sf::RectangleShape> &shap
     return true;
 }
 // write this function
- std::vector<sf::RectangleShape> Utility::OpenPNG(char * path, int Xsize, int Ysize)
+std::vector<sf::RectangleShape> Utility::OpenPNG(std::string &path, int *Xsize, int *Ysize)
 {
-    pngwriter reader(Xsize, Ysize, 1, path);
-    reader.readfromfile(path);
+    pngwriter reader(1, 1, 1, path.c_str());
+    reader.readfromfile(path.c_str());
+    *Xsize = reader.getwidth();
+    *Ysize = reader.getheight();
+
     std::vector<sf::RectangleShape> newshapes;
-    for (int i = 0; i < Xsize; i++)
+    newshapes.reserve(reader.getwidth() * reader.getheight());
+    for (int i = 0; i < reader.getwidth(); i++)
     {
-        for (int r = 0; r < Ysize; r++)
+        for (int r = 0; r < reader.getheight(); r++)
         {
             int rr, gg, bb;
             rr = reader.read(i, r, 1);
@@ -61,7 +65,7 @@ bool Utility::SaveToPNG(std::string &path, std::vector<sf::RectangleShape> &shap
 
             sf::RectangleShape shape;
             shape.setPosition(i * 20, r * 20);
-            shape.setSize({20,20});
+            shape.setSize({20, 20});
             shape.setFillColor(sf::Color(rr / 255, gg / 255, bb / 255));
             newshapes.push_back(shape);
         }

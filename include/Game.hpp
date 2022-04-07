@@ -19,7 +19,6 @@ private:
     std::vector<sf::RectangleShape> shapes;
     sf::RectangleShape *selected = nullptr;
     bool showcolour;
-    char *currentfile = new char[1000];
 
     bool init = ImGui::SFML::Init(window);
     // previous colour of the currently selected rectangle , do not modify anymore
@@ -27,7 +26,9 @@ private:
     float currentcolor[3] = {1.0f, 1.0f, 1.0f};
     float scrollSpeed = 1.5;
 
-    char *buffer = new char[1000];
+    
+    std::string currentfile;
+    std::string file_to_open;
     ImGuiIO &io = ImGui::GetIO();
     std::vector<float> memusage;
     int Xsize = 64;

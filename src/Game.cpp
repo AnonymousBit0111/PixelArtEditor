@@ -5,6 +5,7 @@
 #include <memory>
 #include <cmath>
 #include <fstream>
+#include "imgui_stdlib.h"
 #include "Utility.hpp"
 
 // test will move this later
@@ -44,8 +45,6 @@ Game::Game()
 Game::~Game()
 {
     ImGui::SFML::Shutdown();
-    delete[] buffer;
-    delete[] currentfile;
 }
 
 void Game::Run()
@@ -82,17 +81,37 @@ void Game::Draw()
 }
 void Game::DrawUI()
 {
+    // Beggining of menu bar
     ImGui::BeginMainMenuBar();
     if (ImGui::BeginMenu("File"))
     {
-        if (ImGui::MenuItem("New"))
+        if (ImGui::BeginMenu("New"))
         {
-            // Do something
+            // TODO : creating new files
+            ImGui::EndMenu();
         }
-        if (ImGui::Button("Save"))
+        if (ImGui::BeginMenu("Save"))
         {
-            std::string path = "/home/ilya/Desktop/PixelArtEditor/PixelArtEditor/test.png";
-            Utility::SaveToPNG(path, shapes, Xsize, Ysize);
+            if (ImGui::Button("SaveCurrent"))
+            {
+
+                std::string path = currentfile;
+                Utility::SaveToPNG(path, shapes, Xsize, Ysize);
+            }
+            if (ImGui::BeginMenu("Save As"))
+            {
+
+                ImGui::InputText("", &currentfile);
+                ImGui::SameLine();
+                if (ImGui::Button("Save"))
+                {
+                    Utility::SaveToPNG(currentfile, shapes, Xsize, Ysize);
+                };
+
+                ImGui::EndMenu();
+            }
+
+            ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Open PNG"))
         {
@@ -102,19 +121,9 @@ void Game::DrawUI()
                 selected = nullptr;
                 std::ofstream log("./log.txt");
 
-                for (auto &i : shapes)
-                {
-                    log << (uint)i.getFillColor().r << "," << (uint)i.getFillColor().g << "," << (uint)i.getFillColor().b << "\n";
-                }
-                log << "END:\n\n\n\n";
-
-                shapes = Utility::OpenPNG(currentfile, Xsize, Ysize);
-                for (auto &i : shapes)
-                {
-                    log << (uint)i.getFillColor().r << "," << (uint)i.getFillColor().g << "," << (uint)i.getFillColor().b << "\n";
-                }
+                shapes = Utility::OpenPNG(file_to_open, &Xsize, &Ysize);
             }
-            ImGui::InputText("pathtofile", currentfile, sizeof(char) * 1000);
+            ImGui::InputText("pathtofile", &file_to_open);
             ImGui::EndMenu();
         }
         if (ImGui::MenuItem("Open custom sprite"))
@@ -124,6 +133,7 @@ void Game::DrawUI()
     }
     if (ImGui::BeginMenu("Settings"))
     {
+        ImGui::SliderFloat("scrollspeed", &scrollSpeed, 1, 2);
 
         // ImGui::BeginMenu("size");
 
@@ -168,14 +178,10 @@ void Game::DrawUI()
         ImGui::EndMenu();
     }
     ImGui::EndMainMenuBar();
+    // End of menu bar
 
     ImGui::Begin("Colour picker");
     ImGui::ColorPicker3("Colour", currentcolor, ImGuiColorEditFlags_PickerHueWheel);
-    ImGui::End();
-
-    ImGui::Begin("Pallet Options");
-
-    ImGui::SliderFloat("scrollspeed", &scrollSpeed, 1, 2);
     ImGui::End();
 
     // TODO show some debug info
