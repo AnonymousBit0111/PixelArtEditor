@@ -19,6 +19,7 @@ private:
     std::vector<sf::RectangleShape> shapes;
     sf::RectangleShape *selected = nullptr;
     bool showcolour;
+    char *currentfile = new char[1000];
 
     bool init = ImGui::SFML::Init(window);
     // previous colour of the currently selected rectangle , do not modify anymore
@@ -29,6 +30,10 @@ private:
     char *buffer = new char[1000];
     ImGuiIO &io = ImGui::GetIO();
     std::vector<float> memusage;
+    int Xsize = 64;
+    int Ysize = 64;
+    int OldXsize = 64;
+    int OldYsize = 64;
 
 public:
     Game();

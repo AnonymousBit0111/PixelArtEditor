@@ -1,4 +1,4 @@
-CXX		  := clang
+CXX		  := g++
 CXX_FLAGS := -Wall -Wextra -std=c++17 -ggdb  -pthread  -lstdc++ -lm 
 
 BIN		:= bin
@@ -6,7 +6,7 @@ SRC		:= src
 INCLUDE	:= include
 LIB		:= lib
 
-LIBRARIES	:= -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lGL
+LIBRARIES	:= -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lGL  -lPNGwriter -lpng -lfreetype
 EXECUTABLE	:= main
 
 

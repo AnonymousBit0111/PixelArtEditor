@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <cmath>
+#include <fstream>
 #include "Utility.hpp"
 
 // test will move this later
@@ -44,6 +45,7 @@ Game::~Game()
 {
     ImGui::SFML::Shutdown();
     delete[] buffer;
+    delete[] currentfile;
 }
 
 void Game::Run()
@@ -52,6 +54,7 @@ void Game::Run()
     {
         sf::Event e;
         PollEvents(e);
+        Draw();
     }
 }
 void Game::Update()
@@ -61,12 +64,9 @@ void Game::DrawSprites()
 {
     // TODO culling
 
-    for (auto &i : shapes)
+    for (int i = 0; i < shapes.size(); i++)
     {
-        // if (view.contains(i.getPosition()))
-        // {
-        window.draw(i);
-        // }
+        window.draw(shapes[i]);
     }
 }
 void Game::Draw()
@@ -82,15 +82,93 @@ void Game::Draw()
 }
 void Game::DrawUI()
 {
-
-    ImGui::Begin("Create a new project");
-    ImGui::InputText("filename", buffer, sizeof(char) * 1000);
-    ImGui::SameLine();
-    if (ImGui::Button("Open"))
+    ImGui::BeginMainMenuBar();
+    if (ImGui::BeginMenu("File"))
     {
-        // TODO add open file logic
+        if (ImGui::MenuItem("New"))
+        {
+            // Do something
+        }
+        if (ImGui::Button("Save"))
+        {
+            std::string path = "/home/ilya/Desktop/PixelArtEditor/PixelArtEditor/test.png";
+            Utility::SaveToPNG(path, shapes, Xsize, Ysize);
+        }
+        if (ImGui::BeginMenu("Open PNG"))
+        {
+
+            if (ImGui::Button("open"))
+            {
+                selected = nullptr;
+                std::ofstream log("./log.txt");
+
+                for (auto &i : shapes)
+                {
+                    log << (uint)i.getFillColor().r << "," << (uint)i.getFillColor().g << "," << (uint)i.getFillColor().b << "\n";
+                }
+                log << "END:\n\n\n\n";
+
+                shapes = Utility::OpenPNG(currentfile, Xsize, Ysize);
+                for (auto &i : shapes)
+                {
+                    log << (uint)i.getFillColor().r << "," << (uint)i.getFillColor().g << "," << (uint)i.getFillColor().b << "\n";
+                }
+            }
+            ImGui::InputText("pathtofile", currentfile, sizeof(char) * 1000);
+            ImGui::EndMenu();
+        }
+        if (ImGui::MenuItem("Open custom sprite"))
+        {
+        }
+        ImGui::EndMenu();
     }
-    ImGui::End();
+    if (ImGui::BeginMenu("Settings"))
+    {
+
+        // ImGui::BeginMenu("size");
+
+        if (ImGui::BeginMenu("size"))
+        {
+            ImGui::InputInt("x", &Xsize);
+
+            ImGui::InputInt("y", &Ysize);
+            if (ImGui::Button("Resize"))
+            {
+                if (shapes.size() < (Xsize * Ysize))
+                {
+                    std::cout << "resized\n";
+
+                    shapes.resize(Xsize * Ysize);
+
+                    for (int i = 0; i < Xsize; i++)
+                    {
+                        for (int r = 0; r < Ysize; r++)
+                        {
+                            //  if ((i * r) < shapes.size())
+                            //    continue;
+                            if (i < OldYsize && r < OldXsize)
+                                continue;
+
+                            sf::RectangleShape shape;
+                            shape.setPosition(i * 20, r * 20);
+                            shape.setSize({20, 20});
+                            shape.setFillColor(sf::Color::White);
+                            shape.setOutlineColor(sf::Color::White);
+                            shapes.push_back(shape);
+                        }
+                    }
+                    OldXsize = Xsize;
+                    OldYsize = Ysize;
+                }
+            }
+            ImGui::SameLine();
+
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenu();
+    }
+    ImGui::EndMainMenuBar();
+
     ImGui::Begin("Colour picker");
     ImGui::ColorPicker3("Colour", currentcolor, ImGuiColorEditFlags_PickerHueWheel);
     ImGui::End();
@@ -134,112 +212,111 @@ void Game::SelectShapeAt(sf::Vector2f pos)
 
 void Game::PollEvents(sf::Event &e)
 {
-    bool redrawneeded = false;
-    if (window.waitEvent(e))
+    if (window.pollEvent(e))
     {
-        if (e.type == sf::Event::Closed)
         {
-            window.close();
-        }
-        ImGui::SFML::ProcessEvent(window, e);
-
-        // only input if imgui isnt using the mouse
-
-        if (!io.WantCaptureMouse)
-            switch (e.type)
+            if (e.type == sf::Event::Closed)
             {
-            case sf::Event::MouseButtonPressed:
-                if (selected != nullptr)
-                {
-                    selected->setFillColor(sf::Color(currentcolor[0] * 255, currentcolor[1] * 255, currentcolor[2] * 255));
-                    prevcolor = sf::Color(currentcolor[0] * 255, currentcolor[1] * 255, currentcolor[2] * 255);
-                }
-                break;
+                window.close();
+            }
+            ImGui::SFML::ProcessEvent(window, e);
 
-            case sf::Event::MouseMoved:
-                if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+            // only input if imgui isnt using the mouse
+
+            if (!io.WantCaptureMouse)
+                switch (e.type)
                 {
+                case sf::Event::MouseButtonPressed:
                     if (selected != nullptr)
                     {
                         selected->setFillColor(sf::Color(currentcolor[0] * 255, currentcolor[1] * 255, currentcolor[2] * 255));
                         prevcolor = sf::Color(currentcolor[0] * 255, currentcolor[1] * 255, currentcolor[2] * 255);
                     }
-                }
-                // TODO: add dragging because this doesnt work
-                //  if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
-                //  {
-                //      sf::View view = window.getView();
-                //      sf::Vector2f deltaPos = sf::Vector2f(e.mouseMove.x * 0.01, e.mouseMove.y * 0.01);
-                //      view.setCenter(view.getCenter() + deltaPos);
-                //      window.setView(view);
-                //  }
+                    break;
+
+                case sf::Event::MouseMoved:
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+                    {
+                        if (selected != nullptr)
+                        {
+                            selected->setFillColor(sf::Color(currentcolor[0] * 255, currentcolor[1] * 255, currentcolor[2] * 255));
+                            prevcolor = sf::Color(currentcolor[0] * 255, currentcolor[1] * 255, currentcolor[2] * 255);
+                        }
+                    }
+                    // TODO: add dragging because this doesnt work
+                    //  if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+                    //  {
+                    //      sf::View view = window.getView();
+                    //      sf::Vector2f deltaPos = sf::Vector2f(e.mouseMove.x * 0.01, e.mouseMove.y * 0.01);
+                    //      view.setCenter(view.getCenter() + deltaPos);
+                    //      window.setView(view);
+                    //  }
+                    {
+                        auto pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+                        SelectShapeAt(pos);
+                    }
+                    break;
+                case sf::Event::Closed:
+                    window.close();
+                    break;
+                case sf::Event::Resized:
                 {
-                    auto pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-                    SelectShapeAt(pos);
-                }
-                break;
-            case sf::Event::Closed:
-                window.close();
-                break;
-            case sf::Event::Resized:
-            {
-                window.setView(sf::View(sf::FloatRect(0.0f, 0.0f, static_cast<float>(e.size.width), static_cast<float>(e.size.height))));
 
-                break;
-            }
-            case sf::Event::MouseWheelMoved:
-            {
-                // sf::View view = window.getView();
-                // sf::Vector2 size = view.getSize();
-                // int delta = 1;
-                // if (e.mouseWheel.delta < 0)
-                //     delta = -1;
-                // view.setSize(size.x + e.mouseWheel.x * delta, size.y + e.mouseWheel.y * delta);
-                // window.setView(view);
-                if (e.mouseWheel.delta > 0)
-                    zoomViewAt({e.mouseWheel.x, e.mouseWheel.y}, window, (1.f / scrollSpeed));
-                else if (e.mouseWheel.delta < 0)
-                    zoomViewAt({e.mouseWheel.x, e.mouseWheel.y}, window, scrollSpeed);
+                    window.setView(sf::View(sf::FloatRect(0.0f, 0.0f, static_cast<float>(e.size.width), static_cast<float>(e.size.height))));
 
-                break;
-            }
-            case sf::Event::KeyPressed:
-            {
-                sf::View view = window.getView();
-
-                if (e.key.code == sf::Keyboard::A)
-                {
-                    view.move(-1.0f * scrollSpeed, 0.0f);
-                    window.setView(view);
                     break;
                 }
-                if (e.key.code == sf::Keyboard::D)
+                case sf::Event::MouseWheelMoved:
                 {
-                    view.move(1.0f * scrollSpeed, 0.0f);
-                    window.setView(view);
+                    // sf::View view = window.getView();
+                    // sf::Vector2 size = view.getSize();
+                    // int delta = 1;
+                    // if (e.mouseWheel.delta < 0)
+                    //     delta = -1;
+                    // view.setSize(size.x + e.mouseWheel.x * delta, size.y + e.mouseWheel.y * delta);
+                    // window.setView(view);
+
+                    if (e.mouseWheel.delta > 0)
+                        zoomViewAt({e.mouseWheel.x, e.mouseWheel.y}, window, (1.f / scrollSpeed));
+                    else if (e.mouseWheel.delta < 0)
+                        zoomViewAt({e.mouseWheel.x, e.mouseWheel.y}, window, scrollSpeed);
+
                     break;
                 }
-                if (e.key.code == sf::Keyboard::W)
+                case sf::Event::KeyPressed:
                 {
-                    view.move(0.0f, -1.0f * scrollSpeed);
-                    window.setView(view);
-                }
-                if (e.key.code == sf::Keyboard::S)
-                {
-                    view.move(0.0f, 1.0f * scrollSpeed);
-                    window.setView(view);
-                }
-            }
+                    sf::View view = window.getView();
 
-            break;
-
-            default:
+                    if (e.key.code == sf::Keyboard::A)
+                    {
+                        view.move(-1.0f * scrollSpeed, 0.0f);
+                        window.setView(view);
+                        break;
+                    }
+                    if (e.key.code == sf::Keyboard::D)
+                    {
+                        view.move(1.0f * scrollSpeed, 0.0f);
+                        window.setView(view);
+                        break;
+                    }
+                    if (e.key.code == sf::Keyboard::W)
+                    {
+                        view.move(0.0f, -1.0f * scrollSpeed);
+                        window.setView(view);
+                    }
+                    if (e.key.code == sf::Keyboard::S)
+                    {
+                        view.move(0.0f, 1.0f * scrollSpeed);
+                        window.setView(view);
+                    }
+                }
 
                 break;
-            }
-        if (!redrawneeded)
-            redrawneeded = true;
+
+                default:
+
+                    break;
+                }
+        }
     }
-    if (redrawneeded)
-        Draw();
 }
