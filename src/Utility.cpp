@@ -4,7 +4,27 @@
 #include <iostream>
 #include <fstream>
 #include <SFML/Graphics.hpp>
-//
+#include <imgui.h>
+
+// //////////////////////////////////////////////////////////////////////
+
+Utility::Profiler::Timer::Timer()
+{
+}
+void Utility::Profiler::Timer::start()
+{
+    starttime = std::chrono::high_resolution_clock::now();
+}
+float Utility::Profiler::Timer::stop()
+{
+    end = std::chrono::high_resolution_clock::now();
+    duration = end - starttime;
+    return duration.count() * 1000;
+}
+Utility::Profiler::Timer::~Timer()
+{
+}
+
 void Utility::GetMemoryUsage(double &vm_usage, double &resident_set)
 {
     vm_usage = 0.0;
@@ -72,4 +92,35 @@ std::vector<sf::RectangleShape> Utility::OpenPNG(std::string &path, int *Xsize, 
     }
     reader.close();
     return newshapes;
+}
+static Utility::Profiler::Timer timer;
+
+void Utility::Profiler::BeginFrame()
+{
+    timer.start();
+}
+float avg(std::vector<float> &vec)
+{
+    float total = 0;
+    for (auto &i : vec)
+    {
+        total += i;
+    }
+    return total / vec.size();
+}
+void Utility::Profiler::EndFrame()
+{
+    float time = timer.stop();
+    if (frametimes.size() >= 100)
+    {
+        frametimes.erase(frametimes.begin());
+    }
+    frametimes.push_back(time);
+    ImGui::Begin("debug");
+    float *frametimesarr = &frametimes[0];
+    ImGui::ShowDemoWindow();
+    float average = avg(frametimes);
+    ImGui::PlotHistogram("frametimes", frametimesarr, frametimes.size(), 0, NULL, 0.0f, average+(average/2), ImVec2(250.0f,100.0f));
+    ImGui::Text("avg : %f ms",average );
+    ImGui::End();
 }

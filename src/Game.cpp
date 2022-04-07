@@ -51,6 +51,7 @@ void Game::Run()
 {
     while (window.isOpen())
     {
+        Utility::Profiler::BeginFrame();
         sf::Event e;
         PollEvents(e);
         Draw();
@@ -63,9 +64,9 @@ void Game::DrawSprites()
 {
     // TODO culling
 
-    for (int i = 0; i < shapes.size(); i++)
+    for (auto &i : shapes)
     {
-        window.draw(shapes[i]);
+        window.draw(i);
     }
 }
 void Game::Draw()
@@ -75,7 +76,7 @@ void Game::Draw()
 
     DrawSprites();
     DrawUI();
-
+    Utility::Profiler::EndFrame();
     ImGui::SFML::Render(window);
     window.display();
 }
@@ -101,12 +102,12 @@ void Game::DrawUI()
             if (ImGui::BeginMenu("Save As"))
             {
 
-                ImGui::InputText("", &currentfile);
+                ImGui::InputText("##something", &currentfile);
                 ImGui::SameLine();
                 if (ImGui::Button("Save"))
                 {
                     Utility::SaveToPNG(currentfile, shapes, Xsize, Ysize);
-                };
+                }
 
                 ImGui::EndMenu();
             }
@@ -184,10 +185,7 @@ void Game::DrawUI()
     ImGui::ColorPicker3("Colour", currentcolor, ImGuiColorEditFlags_PickerHueWheel);
     ImGui::End();
 
-    // TODO show some debug info
-    ImGui::Begin("debug info");
 
-    ImGui::End();
 }
 void Game::SelectShapeAt(sf::Vector2f pos)
 {
