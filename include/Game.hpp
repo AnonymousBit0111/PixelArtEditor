@@ -26,11 +26,11 @@ private:
     float currentcolor[3] = {1.0f, 1.0f, 1.0f};
     float scrollSpeed = 1.5;
 
-    
     std::string currentfile;
     std::string file_to_open;
     ImGuiIO &io = ImGui::GetIO();
-    std::vector<float> memusage;
+    std::vector<sf::RectangleShape*> drawlist;
+
     int Xsize = 64;
     int Ysize = 64;
     int OldXsize = 64;
@@ -46,4 +46,5 @@ public:
     void Draw();
     void PollEvents(sf::Event &e);
     void DrawUI();
+    void CheckDrawList();
 };

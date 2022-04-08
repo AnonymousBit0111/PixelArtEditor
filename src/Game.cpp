@@ -22,6 +22,13 @@ void zoomViewAt(sf::Vector2i pixel, sf::RenderWindow &window, float zoom)
     window.setView(view);
 }
 
+bool FindPoint(sf::Vector2f point1, sf::Vector2f point2, int x, int y)
+{
+    if (x > point1.x && x < point2.x && y > point1.y && y < point2.y)
+        return true;
+
+    return false;
+}
 Game::Game()
 {
     window.setFramerateLimit(120);
@@ -40,6 +47,7 @@ Game::Game()
             shapes.push_back(shape);
         }
     }
+    CheckDrawList();
 }
 
 Game::~Game()
@@ -60,13 +68,27 @@ void Game::Run()
 void Game::Update()
 {
 }
-void Game::DrawSprites()
+void Game::CheckDrawList()
 {
-    // TODO culling
+    drawlist.clear();
+    ImVector<sf::RectangleShape> d;
 
     for (auto &i : shapes)
     {
-        window.draw(i);
+        sf::Vector2f pos = i.getPosition();
+        auto viewport = window.getView().getViewport();
+        auto mappedpos = window.mapCoordsToPixel(pos);
+
+        if (FindPoint({0.0f, 0.0f}, {640, 640}, mappedpos.x, mappedpos.y))
+            drawlist.push_back(&i);
+    }
+}
+void Game::DrawSprites()
+{
+    // TODO culling
+    for (auto &i : drawlist)
+    {
+        window.draw(*i);
     }
 }
 void Game::Draw()
@@ -170,6 +192,7 @@ void Game::DrawUI()
                     }
                     OldXsize = Xsize;
                     OldYsize = Ysize;
+                    CheckDrawList();
                 }
             }
             ImGui::SameLine();
@@ -184,11 +207,10 @@ void Game::DrawUI()
     ImGui::Begin("Colour picker");
     ImGui::ColorPicker3("Colour", currentcolor, ImGuiColorEditFlags_PickerHueWheel);
     ImGui::End();
-
-
 }
 void Game::SelectShapeAt(sf::Vector2f pos)
 {
+
     bool selectionmade = false;
     for (auto &i : shapes)
     {
@@ -196,7 +218,8 @@ void Game::SelectShapeAt(sf::Vector2f pos)
         {
             if (selected != nullptr)
             {
-                selected->setFillColor(prevcolor);
+                
+               selected->setFillColor(prevcolor);
             }
             prevcolor = i.getFillColor();
             selected = &i;
@@ -267,7 +290,7 @@ void Game::PollEvents(sf::Event &e)
                 {
 
                     window.setView(sf::View(sf::FloatRect(0.0f, 0.0f, static_cast<float>(e.size.width), static_cast<float>(e.size.height))));
-
+                    CheckDrawList();
                     break;
                 }
                 case sf::Event::MouseWheelMoved:
@@ -279,12 +302,13 @@ void Game::PollEvents(sf::Event &e)
                     //     delta = -1;
                     // view.setSize(size.x + e.mouseWheel.x * delta, size.y + e.mouseWheel.y * delta);
                     // window.setView(view);
-
+                    auto view = window.getView();
                     if (e.mouseWheel.delta > 0)
-                        zoomViewAt({e.mouseWheel.x, e.mouseWheel.y}, window, (1.f / scrollSpeed));
+                        view.zoom((1.f / scrollSpeed));
                     else if (e.mouseWheel.delta < 0)
-                        zoomViewAt({e.mouseWheel.x, e.mouseWheel.y}, window, scrollSpeed);
-
+                        view.zoom(scrollSpeed);
+                    window.setView(view);
+                    CheckDrawList();
                     break;
                 }
                 case sf::Event::KeyPressed:
@@ -314,8 +338,9 @@ void Game::PollEvents(sf::Event &e)
                         window.setView(view);
                     }
                 }
+                    CheckDrawList();
 
-                break;
+                    break;
 
                 default:
 
